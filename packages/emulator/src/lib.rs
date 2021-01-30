@@ -1,27 +1,57 @@
 use keylistener::KeyListener;
 use keymap::KeyMap;
+use std::collections::HashMap;
 use wasm_bindgen::prelude::*;
 use yew::prelude::*;
 use yew::services::keyboard::{KeyListenerHandle, KeyboardService};
+use yew::services::ConsoleService;
 use yew::web_sys;
 
 struct Model {
     link: ComponentLink<Self>,
-    keys: i64,
+    up_listener: KeyListenerHandle,
+    down_listener: KeyListenerHandle,
+    keys: HashMap<u32, bool>,
 }
 
 enum Msg {
-    AddOne,
+    KeyDown(u32),
+    KeyUp(u32),
 }
 
 impl Component for Model {
     type Message = Msg;
     type Properties = ();
     fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
-        Self { link, keys: 300 }
+        let up_listener = KeyboardService::register_key_up(
+            &web_sys::window().unwrap(),
+            (&link).callback(|e: KeyboardEvent| Self::Message::KeyUp(e.key_code())),
+        );
+        let down_listener = KeyboardService::register_key_down(
+            &web_sys::window().unwrap(),
+            (&link).callback(|e: KeyboardEvent| Self::Message::KeyDown(e.key_code())),
+        );
+        Self {
+            link,
+            up_listener,
+            down_listener,
+            keys: (0..100).into_iter().map(|i| (i, false)).collect(),
+        }
     }
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
+        match msg {
+            Msg::KeyDown(c) => {
+                if self.keys.get(&c).is_some() {
+                    self.keys.insert(c, true);
+                }
+            }
+            Msg::KeyUp(c) => {
+                if self.keys.get(&c).is_some() {
+                    self.keys.insert(c, false);
+                }
+            }
+        }
         true
     }
 
@@ -33,9 +63,13 @@ impl Component for Model {
     }
 
     fn view(&self) -> Html {
+        let key_elems = self
+            .keys
+            .iter()
+            .map(|(i, pressed)| html! {<KeySwitch pressed=pressed/>});
         html! {
             <div>
-                { for (0..self.keys).into_iter().map(|i|html!{<KeySwitch keyindex=i/>}) }
+                { for key_elems }
                 <KeyListener />
             </div>
         }
@@ -43,69 +77,37 @@ impl Component for Model {
 }
 #[derive(Properties, Clone, PartialEq)]
 pub struct KeySwitchProps {
-    keyindex: i64,
+    pressed: bool,
 }
 struct KeySwitch {
     props: KeySwitchProps,
     link: ComponentLink<Self>,
-    up_listener: KeyListenerHandle,
-    down_listener: KeyListenerHandle,
-    pressed: bool,
-}
-enum KeySwitchEvent {
-    Down(u32),
-    Up(u32),
 }
 impl Component for KeySwitch {
-    type Message = KeySwitchEvent;
+    type Message = ();
     type Properties = KeySwitchProps;
 
     fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
-        let up_listener = KeyboardService::register_key_up(
-            &web_sys::window().unwrap(),
-            (&link).callback(|e: KeyboardEvent| Self::Message::Up(e.key_code())),
-        );
-        let down_listener = KeyboardService::register_key_down(
-            &web_sys::window().unwrap(),
-            (&link).callback(|e: KeyboardEvent| Self::Message::Down(e.key_code())),
-        );
-        Self {
-            props,
-            link,
-            up_listener,
-            down_listener,
-            pressed: false,
-        }
+        Self { props, link }
     }
 
     fn update(&mut self, msg: Self::Message) -> bool {
-        match msg {
-            KeySwitchEvent::Down(c) => {
-                if c == self.props.keyindex as u32 {
-                    self.pressed = true;
-                    true
-                } else {
-                    false
-                }
-            }
-            KeySwitchEvent::Up(c) => {
-                if c == self.props.keyindex as u32 {
-                    self.pressed = false;
-                    true
-                } else {
-                    false
-                }
-            }
-        }
-    }
-
-    fn change(&mut self, props: Self::Properties) -> bool {
         true
     }
 
+    fn change(&mut self, props: Self::Properties) -> bool {
+        if self.props != props {
+            self.props = props;
+            true
+        } else {
+            false
+        }
+    }
+
     fn view(&self) -> Html {
+        ConsoleService::info(format!("render key").as_str());
         html! {
-                <button class=if self.pressed {"button-down"}else{""}>{ self.props.keyindex }</button>
+                <button class=if self.props.pressed {"button-down"}else{""}>{"[ ]"}</button>
         }
     }
 }
