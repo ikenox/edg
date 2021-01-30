@@ -4,7 +4,7 @@ use yew::prelude::*;
 
 struct Model {
     link: ComponentLink<Self>,
-    value: i64,
+    keys: i64,
 }
 
 enum Msg {
@@ -15,13 +15,10 @@ impl Component for Model {
     type Message = Msg;
     type Properties = ();
     fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
-        Self { link, value: 0 }
+        Self { link, keys: 10 }
     }
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        match msg {
-            Msg::AddOne => self.value += 1,
-        }
         true
     }
 
@@ -35,9 +32,41 @@ impl Component for Model {
     fn view(&self) -> Html {
         html! {
             <div>
-                <button onclick=self.link.callback(|_| Msg::AddOne)>{ "+1" }</button>
-                <p>{ self.value }</p>
+                { for (0..self.keys).into_iter().map(|i|html!{<KeySwitch />}) }
             </div>
+        }
+    }
+}
+
+struct KeySwitch {
+    link: ComponentLink<Self>,
+    pressed: bool,
+}
+enum KeySwitchMsg {
+    Pressed,
+}
+impl Component for KeySwitch {
+    type Message = KeySwitchMsg;
+    type Properties = ();
+
+    fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
+        Self {
+            link,
+            pressed: false,
+        }
+    }
+
+    fn update(&mut self, msg: Self::Message) -> bool {
+        true
+    }
+
+    fn change(&mut self, _props: Self::Properties) -> bool {
+        true
+    }
+
+    fn view(&self) -> Html {
+        html! {
+                <button>{ "+1" }</button>
         }
     }
 }

@@ -21,6 +21,10 @@ pub struct KeyMap {
     pub mappings: HashMap<HashMap<KeyIndex, KeyInteraction>, HashSet<Action>>,
 }
 
+pub trait Keyboard {
+    fn key_states(&self) -> &[KeyIndex];
+}
+
 // impl KeyMap {
 //     pub fn resolve(&self, pushed: &HashMap<KeyIndex, KeyInteraction>) -> HashSet<Action> {}
 // }
