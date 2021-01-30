@@ -1,4 +1,7 @@
 #![no_std]
+
+pub mod hardware;
+
 use arrayvec::ArrayVec;
 use hashbrown::{HashMap, HashSet};
 
@@ -21,8 +24,15 @@ pub struct KeyMap {
     pub mappings: HashMap<HashMap<KeyIndex, KeyInteraction>, HashSet<Action>>,
 }
 
-pub trait Keyboard {
-    fn key_states(&self) -> &[KeyIndex];
+pub struct Color(pub u8, pub u8, pub u8);
+
+pub struct System {}
+impl System {
+    pub fn run() {
+        loop {
+            asy
+        }
+    }
 }
 
 // impl KeyMap {

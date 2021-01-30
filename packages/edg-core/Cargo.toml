@@ -1,5 +1,5 @@
 [package]
-name = "keymap"
+name = "edg-core"
 version = "0.1.0"
 authors = ["Naoto Ikeno <ikenox@gmail.com>"]
 edition = "2018"
